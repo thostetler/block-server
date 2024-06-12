@@ -18,7 +18,7 @@ RUN npm install
 
 # Copy the rest of the application code
 COPY index.js .
-COPY image.png .
+COPY images .
 
 # Expose the port the app runs on
 EXPOSE 4321

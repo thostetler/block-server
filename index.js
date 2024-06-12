@@ -9,7 +9,7 @@ const MAX_TEXT_LEN = 80;
 app.get('/search-box', async (req, res) => {
   let text = req.query.text || 'Hello, World!';
   const width = req.query.width ? parseInt(req.query.width) : null;
-  const baseImagePath = path.join(__dirname, 'image.png');
+  const baseImagePath = path.join(__dirname, 'images/search-box.png');
 
   if (text.length > MAX_TEXT_LEN) {
     text = text.slice(0, MAX_TEXT_LEN) + '...';

@@ -7,7 +7,6 @@ const fs = require('fs-extra');
 
 const PORT = 4321;
 const app = express();
-const MAX_TEXT_LEN = 80;
 
 // Create directories if they don't exist
 const createDirectories = () => {
@@ -39,6 +38,9 @@ app.use(express.static('public'));
 app.use('/assets/images', express.static('assets/images'));
 app.use('/assets/gifs', express.static('assets/gifs'));
 
+const MAX_TEXT_LEN = 80;
+const MIN_WIDTH = 480;
+
 app.get('/search-box', async (req, res) => {
   let text = decodeURIComponent(req.query.text) || 'Hello, World!';
 
@@ -58,7 +60,7 @@ app.get('/search-box', async (req, res) => {
     ctxTemp.font = `${fontSize}px -apple-system, "system-ui", "Segoe UI", Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol"`;
 
     const textWidth = ctxTemp.measureText(text).width;
-    const width = textWidth + padding * 2 + iconWidth;
+    const width = Math.max(textWidth + padding * 2 + iconWidth, MIN_WIDTH);
 
     const canvas = createCanvas(width, baseHeight);
     const ctx = canvas.getContext('2d');
@@ -77,7 +79,7 @@ app.get('/search-box', async (req, res) => {
     ctx.fillRect(width - iconWidth, 0, iconWidth, baseHeight);
 
     // Load and draw the search icon
-    const searchIconPath = path.join(__dirname, 'images/search-icon.svg');
+    const searchIconPath = path.join(__dirname, 'images/search-icon.svg'); // Ensure you have this icon or use a different path
     const iconData = fs.readFileSync(searchIconPath, 'utf-8');
     const img = await loadImage(`data:image/svg+xml;base64,${Buffer.from(iconData).toString('base64')}`);
     const iconSize = 20;
@@ -105,7 +107,6 @@ app.get('/search-box', async (req, res) => {
     res.status(500).send('Error generating image');
   }
 });
-
 // File upload endpoint
 app.post('/upload', upload.single('file'), (req, res) => {
   if (!req.file) {

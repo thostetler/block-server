@@ -1,0 +1,13 @@
+{
+  "name": "image-generator",
+  "version": "1.0.0",
+  "description": "A simple image generator with text overlay using Node.js",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "express": "^4.17.1",
+    "canvas": "^2.7.0"
+  }
+}

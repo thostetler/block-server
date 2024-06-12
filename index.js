@@ -1,53 +1,67 @@
 const express = require('express');
 const { createCanvas, loadImage } = require('canvas');
 const path = require('path');
+const fs = require('fs');
 
 const PORT = 4321;
 const app = express();
 const MAX_TEXT_LEN = 80;
 
 app.get('/search-box', async (req, res) => {
-  let text = req.query.text || 'Hello, World!';
-  const width = req.query.width ? parseInt(req.query.width) : null;
-  const baseImagePath = path.join(__dirname, 'images/search-box.png');
+  let text = decodeURIComponent(req.query.text) || 'Hello, World!';
 
   if (text.length > MAX_TEXT_LEN) {
     text = text.slice(0, MAX_TEXT_LEN) + '...';
   }
 
   try {
-    const img = await loadImage(baseImagePath);
+    const baseHeight = 50; // Base height for the search box
+    const padding = 20; // Padding around the text
+    const iconWidth = 50; // Width of the search icon area
+    const fontSize = 20; // Base font size
 
-    // Calculate the new dimensions while maintaining the aspect ratio
-    const aspectRatio = img.width / img.height;
-    let newWidth = img.width;
-    let newHeight = img.height;
+    // Create a temporary canvas to measure text width
+    const canvasTemp = createCanvas(800, baseHeight);
+    const ctxTemp = canvasTemp.getContext('2d');
+    ctxTemp.font = `${fontSize}px -apple-system, "system-ui", "Segoe UI", Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol"`;
 
-    if (width) {
-      newWidth = width;
-      newHeight = Math.round(width / aspectRatio);
-    }
+    const textWidth = ctxTemp.measureText(text).width;
+    const width = textWidth + padding * 2 + iconWidth;
 
-    const canvas = createCanvas(newWidth, newHeight);
+    const canvas = createCanvas(width, baseHeight);
     const ctx = canvas.getContext('2d');
 
-    // Draw the base image with the new dimensions
-    ctx.drawImage(img, 0, 0, newWidth, newHeight);
+    // Draw the search box background
+    ctx.fillStyle = 'white';
+    ctx.fillRect(0, 0, width, baseHeight);
 
-    // Calculate the scaling factor for the font size
-    const scalingFactor = newWidth / img.width;
-    const fontSize = 36 * scalingFactor;
+    // Draw the search box border
+    ctx.strokeStyle = '#ccc';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(0, 0, width, baseHeight);
 
-    // Set text properties with scaled font size
+    // Draw the search icon background
+    ctx.fillStyle = '#3B5998'; // Blue color
+    ctx.fillRect(width - iconWidth, 0, iconWidth, baseHeight);
+
+    // Load and draw the search icon
+    const searchIconPath = path.join(__dirname, 'images/search-icon.svg');
+    const iconData = fs.readFileSync(searchIconPath, 'utf-8');
+    const img = await loadImage(`data:image/svg+xml;base64,${Buffer.from(iconData).toString('base64')}`);
+    const iconSize = 20;
+    const iconX = width - iconWidth / 2 - iconSize / 2;
+    const iconY = baseHeight / 2 - iconSize / 2;
+    ctx.drawImage(img, iconX, iconY, iconSize, iconSize);
+
+    // Set text properties
     ctx.font = `${fontSize}px -apple-system, "system-ui", "Segoe UI", Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol"`;
-    ctx.fontWeight = 'lighter';
     ctx.fillStyle = 'black';
     ctx.textAlign = 'left';
     ctx.textBaseline = 'middle';
 
-    // Position the text in the center
-    const x = 100 * scalingFactor; // Adjust the x position based on the scaling factor
-    const y = newHeight / 2;
+    // Position the text in the center-left
+    const x = padding;
+    const y = baseHeight / 2;
 
     // Draw the text
     ctx.fillText(text, x, y);
